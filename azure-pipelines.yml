@@ -38,6 +38,8 @@ steps:
     cliProjectKey: 'online_store_mern'
     cliProjectName: 'online_store_mern'
     cliSources: 'backend'
+    extraProperties: |
+      sonar.branch.name=
   displayName: 'Prepare SonarQube Analysis'
 
 - task: SonarQubeAnalyze@5
