@@ -1,4 +1,4 @@
-# Azure DevOps Pipeline for MERN Stack
+# Starter pipeline
 trigger:
 - main
 
@@ -28,15 +28,8 @@ stages:
 
     - script: |
         cd backend
-        echo "Verifying package-lock.json..."
-        if [ ! -f "package-lock.json" ]; then
-          echo "##vso[task.logissue type=error]package-lock.json missing - generating new one"
-          npm install
-        else
-          echo "package-lock.json exists - running clean install"
-          npm ci --no-audit --strict-peer-deps=false
-        fi
-      displayName: 'Install backend dependencies'
+        npm install
+      displayName: 'Install backend dependencies (ci)'
 
     - script: |
         cd backend
