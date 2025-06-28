@@ -32,7 +32,7 @@ steps:
 
 - task: SonarQubePrepare@5
   inputs:
-    SonarQube: 'sonar'
+    SonarQube: 'SonarQube1'
     scannerMode: 'CLI'
     configMode: 'manual'
     cliProjectKey: 'online_store_mern'
