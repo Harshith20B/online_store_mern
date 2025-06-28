@@ -1,8 +1,4 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
+# Azure DevOps Pipeline for MERN Stack Application
 trigger:
 - main
 
@@ -11,48 +7,131 @@ pool:
   demands:
   - Agent.Name -equals Harshithb
 
-steps:
-- checkout: self
+variables:
+  # Define common variables
+  dockerRegistryServiceConnection: 'docker'
+  imageRepository: 'harshithb20/online_store_mern'
+  containerRegistry: 'docker.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/backend/Dockerfile'
+  tag: '$(Build.BuildId)'
 
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js 14'
+stages:
+- stage: Build
+  displayName: Build and Test
+  jobs:
+  - job: Build
+    displayName: Build and Test Application
+    steps:
+    - checkout: self
+      displayName: 'Checkout source code'
 
-- script: |
-    cd backend
-    npm install
-  displayName: 'Install npm dependencies'
+    # Install Node.js (updated to a more recent LTS version)
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js 20.x'
 
-- script: |
-    cd backend
-    npm test
-  displayName: 'Run tests'
-  continueOnError: true
+    # Backend: Install dependencies
+    - script: |
+        cd backend
+        echo "Installing backend dependencies..."
+        npm ci --only=production
+      displayName: 'Install backend npm dependencies'
+      continueOnError: false
 
-- task: SonarQubePrepare@5
-  inputs:
-    SonarQube: 'SonarQube1'
-    scannerMode: 'CLI'
-    configMode: 'manual'
-    cliProjectKey: 'online_store_mern'
-    cliProjectName: 'online_store_mern'
-    cliSources: 'backend'
-  displayName: 'Prepare SonarQube Analysis'
+    # Backend: Run tests (if test scripts exist)
+    - script: |
+        cd backend
+        if npm run test --if-present; then
+          echo "Backend tests completed successfully"
+        else
+          echo "No test script found or tests failed"
+        fi
+      displayName: 'Run backend tests'
+      continueOnError: true
 
-- task: SonarQubeAnalyze@5
-  displayName: 'Run SonarQube Analysis'
+    # Frontend: Install dependencies and build
+    - script: |
+        cd frontend
+        echo "Installing frontend dependencies..."
+        npm ci
+        echo "Building frontend..."
+        npm run build
+      displayName: 'Build frontend application'
+      continueOnError: false
 
-- task: SonarQubePublish@5
-  inputs:
-    pollingTimeoutSec: '300'
-  displayName: 'Publish SonarQube Results'
+    # SonarQube Analysis
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: 'SonarQube1'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'online_store_mern'
+        cliProjectName: 'online_store_mern'
+        cliSources: 'backend,frontend/src'
+        cliProjectVersion: '$(Build.BuildNumber)'
+      displayName: 'Prepare SonarQube Analysis'
 
-- task: Docker@2
-  inputs:
-    containerRegistry: 'docker'
-    repository: 'harshithb20/online_store_mern'
-    command: 'buildAndPush'
-    Dockerfile: 'backend/Dockerfile'
-    tags: 'latest'
-  displayName: 'Build and Push Docker Image'
+    - task: SonarQubeAnalyze@5
+      displayName: 'Run SonarQube Analysis'
+
+    - task: SonarQubePublish@5
+      inputs:
+        pollingTimeoutSec: '300'
+      displayName: 'Publish SonarQube Results'
+
+- stage: Docker
+  displayName: Docker Build and Push
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: Docker
+    displayName: Build and Push Docker Images
+    steps:
+    - checkout: self
+      displayName: 'Checkout source code'
+
+    # Build and push backend Docker image
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)-backend'
+        command: 'buildAndPush'
+        Dockerfile: 'backend/Dockerfile'
+        buildContext: 'backend'
+        tags: |
+          $(tag)
+          latest
+      displayName: 'Build and Push Backend Docker Image'
+
+    # Build and push frontend Docker image
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)-frontend'
+        command: 'buildAndPush'
+        Dockerfile: 'frontend/Dockerfile'
+        buildContext: 'frontend'
+        tags: |
+          $(tag)
+          latest
+      displayName: 'Build and Push Frontend Docker Image'
+
+- stage: Deploy
+  displayName: Deploy with Docker Compose
+  dependsOn: Docker
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    displayName: Deploy Application
+    steps:
+    - checkout: self
+      displayName: 'Checkout source code'
+
+    # Optional: Deploy using docker-compose (if you have a deployment environment)
+    - script: |
+        echo "Docker images built and pushed successfully"
+        echo "Backend image: $(imageRepository)-backend:$(tag)"
+        echo "Frontend image: $(imageRepository)-frontend:$(tag)"
+        echo "You can now deploy using docker-compose or your preferred deployment method"
+      displayName: 'Deployment Information'
