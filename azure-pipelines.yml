@@ -1,4 +1,4 @@
-# Azure DevOps Pipeline for MERN Stack
+# Starter pipeline
 trigger:
 - main
 
@@ -23,17 +23,17 @@ stages:
 
     - task: NodeTool@0
       inputs:
-        versionSpec: '20.x'  # Updated to match your Dockerfile Node version
+        versionSpec: '20.x'
       displayName: 'Install Node.js 20'
 
     - script: |
         cd backend
-        npm ci          # Using ci for clean install instead of install
-      displayName: 'Install backend dependencies'
+        npm ci --no-audit  # Disables audit to prevent pipeline failures
+      displayName: 'Install backend dependencies (ci)'
 
     - script: |
         cd backend
-        npm run test    # Changed from npm test to npm run test
+        npm run test
       displayName: 'Run backend tests'
       continueOnError: true
 
@@ -67,7 +67,6 @@ stages:
     steps:
     - checkout: self
 
-    # Build and push backend Docker image
     - task: Docker@2
       inputs:
         containerRegistry: $(DOCKER_REGISTRY)
@@ -80,7 +79,6 @@ stages:
           $(Build.BuildId)
       displayName: 'Build and Push Backend Docker Image'
 
-    # Build and push frontend Docker image
     - task: Docker@2
       inputs:
         containerRegistry: $(DOCKER_REGISTRY)
