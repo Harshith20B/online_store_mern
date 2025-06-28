@@ -29,3 +29,21 @@ steps:
     npm test
   displayName: 'Run tests'
   continueOnError: true
+
+- task: SonarQubePrepare@5
+  inputs:
+    SonarQube: 'sonar'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'online_store_mern'
+    cliProjectName: 'online_store_mern'
+    cliSources: 'backend'
+  displayName: 'Prepare SonarQube Analysis'
+
+- task: SonarQubeAnalyze@5
+  displayName: 'Run SonarQube Analysis'
+
+- task: SonarQubePublish@5
+  inputs:
+    pollingTimeoutSec: '300'
+  displayName: 'Publish SonarQube Results'
