@@ -69,7 +69,7 @@ const Placeorder = ({history}) => {
                         <div className="orders-placeorder">
                         {cart.cartItems.map((item, index) => (
                                 
-                            <p><span className="color-name"><Link to={`/product/${item.product}`}>{item.name}</Link></span> <b>{item.qty} x ${item.price} = ${item.qty * item.price}</b><hr /></p>
+                            <p><span className="color-name"><Link to={`/product/${item.product}`}>{item.name}</Link></span> <b>{item.qty} x ₹{item.price} = ₹{item.qty * item.price}</b><hr /></p>
                           
 
                         ))}
