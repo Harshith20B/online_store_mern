@@ -39,7 +39,7 @@ const CardProduct = ({product}) => {
                        </Link>
                               {Incart ?  <HiShoppingCart className="iconFav" size ='26'/> : <HiOutlineShoppingCart  className="iconFav" color='#999' size='26'  onClick = {addcart}/>  }
 
-                       <div className = 'productpricecard'> {`${product.price} $`}</div>
+                       <div className = 'productpricecard'> {`${product.price} ₹`}</div>
                        <div className = 'Rating'>
                        <Rating value={product.rating} text={`${product.numReviews} reviews`}/>
 
