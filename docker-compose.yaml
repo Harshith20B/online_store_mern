@@ -1,15 +1,46 @@
 version: '3.9'
+
 services:
   frontend:
-    build: ./frontend
+    # Use local build for development
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    # For production, use the pushed image instead:
+    # image: harshithb20/online_store_mern-frontend:latest
     ports:
       - "3000:80"
     depends_on:
       - backend
+    networks:
+      - app-network
 
   backend:
-    build: ./backend
+    # Use local build for development
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    # For production, use the pushed image instead:
+    # image: harshithb20/online_store_mern-backend:latest
     ports:
       - "5000:5000"
     environment:
       - MONGO_URI=mongodb+srv://hac2web:jvMb6ldTFWxDocGp@cluster0.6jebv.mongodb.net/devops
+      - NODE_ENV=production
+    networks:
+      - app-network
+    # Add health check for better reliability
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge
+
+# Optional: Add volumes for data persistence if needed
+# volumes:
+#   mongo-data:
