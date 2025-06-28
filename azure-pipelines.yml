@@ -47,3 +47,12 @@ steps:
   inputs:
     pollingTimeoutSec: '300'
   displayName: 'Publish SonarQube Results'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'docker'
+    repository: 'harshithb20/online_store_mern'
+    command: 'buildAndPush'
+    Dockerfile: 'backend/Dockerfile'
+    tags: 'latest'
+  displayName: 'Build and Push Docker Image'
