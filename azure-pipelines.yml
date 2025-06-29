@@ -113,7 +113,7 @@ stages:
 
     - powershell: |
         $version = "$(GRYPE_VERSION)"
-        $url = "https://github.com/anchore/grype/releases/download/$version/grype_${version}_windows_amd64.zip"
+        $url = "https://github.com/anchore/grype/releases/download/v0.94.0/grype_0.94.0_windows_amd64.zip"
         Write-Host "Downloading Grype from $url"
         curl.exe -L -o grype.zip $url
         Expand-Archive grype.zip -DestinationPath grype
