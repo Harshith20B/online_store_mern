@@ -103,6 +103,8 @@ stages:
 - stage: GrypeScan
   displayName: 'Grype Vulnerability Scan'
   dependsOn: BuildAndPush
+  variables:
+    GRYPE_VERSION: 'v0.94.0'
   jobs:
   - job: Scan
     displayName: 'Scan Backend Image'
@@ -110,7 +112,10 @@ stages:
     - checkout: self
 
     - powershell: |
-        Invoke-WebRequest -Uri https://github.com/anchore/grype/releases/download/v0.94.0/grype_0.94.0_windows_amd64.zip
+        $version = "$(GRYPE_VERSION)"
+        $url = "https://github.com/anchore/grype/releases/download/$version/grype_${version}_windows_amd64.zip"
+        Write-Host "Downloading Grype from $url"
+        curl.exe -L -o grype.zip $url
         Expand-Archive grype.zip -DestinationPath grype
       displayName: 'Download and Extract Grype'
 
