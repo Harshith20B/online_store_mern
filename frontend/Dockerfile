@@ -3,6 +3,7 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 COPY . .
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm install
 RUN npm run build
 
