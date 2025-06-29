@@ -13,11 +13,11 @@ pool:
   - Agent.Name -equals Harshithb
 
 stages:
-- stage: BuildTestAnalyze
-  displayName: 'Build, Test and Analyze'
+- stage: BuildAndTest
+  displayName: 'Build and Test'
   jobs:
-  - job: Backend
-    displayName: 'Backend Processing'
+  - job: BuildTest
+    displayName: 'Backend Build and Test'
     steps:
     - checkout: self
 
@@ -29,13 +29,22 @@ stages:
     - script: |
         cd backend
         npm install
-      displayName: 'Install backend dependencies (ci)'
+      displayName: 'Install Backend Dependencies'
 
     - script: |
         cd backend
         npm run test
-      displayName: 'Run backend tests'
+      displayName: 'Run Backend Tests'
       continueOnError: true
+
+- stage: SonarQubeAnalysis
+  displayName: 'SonarQube Analysis'
+  dependsOn: BuildAndTest
+  jobs:
+  - job: SonarQube
+    displayName: 'Run SonarQube'
+    steps:
+    - checkout: self
 
     - task: SonarQubePrepare@5
       inputs:
@@ -60,7 +69,7 @@ stages:
 
 - stage: BuildAndPush
   displayName: 'Build and Push Docker Images'
-  dependsOn: BuildTestAnalyze
+  dependsOn: SonarQubeAnalysis
   jobs:
   - job: DockerBuild
     displayName: 'Docker Build and Push'
@@ -90,3 +99,21 @@ stages:
           latest
           $(Build.BuildId)
       displayName: 'Build and Push Frontend Docker Image'
+
+- stage: GrypeScan
+  displayName: 'Grype Vulnerability Scan'
+  dependsOn: BuildAndPush
+  jobs:
+  - job: Scan
+    displayName: 'Scan Backend Image'
+    steps:
+    - checkout: self
+
+    - powershell: |
+        Invoke-WebRequest -Uri https://github.com/anchore/grype/releases/download/v0.78.0/grype_windows_amd64.zip -OutFile grype.zip
+        Expand-Archive grype.zip -DestinationPath grype
+      displayName: 'Download and Extract Grype'
+
+    - powershell: |
+        .\grype\grype.exe $(BACKEND_IMAGE):latest
+      displayName: 'Scan Backend Image with Grype'
